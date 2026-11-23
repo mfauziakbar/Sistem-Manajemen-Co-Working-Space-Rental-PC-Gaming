@@ -1,15 +1,32 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.sql.*;
 
 public class MainFrame extends JFrame {
-    private static final Color NAVY = new Color(15, 23, 42);
-    private static final Color PANEL = new Color(30, 41, 59);
-    private static final Color BLUE = new Color(37, 99, 235);
-    private static final Color CYAN = new Color(56, 189, 248);
-    private static final Color WHITE = new Color(241, 245, 249);
+
+    // background sama panel
+    private static final Color BACKGROUND = new Color(23, 26, 33);
+    private static final Color PANEL = new Color(34, 38, 48);
+    private static final Color INPUT = new Color(44, 48, 59);
+    private static final Color HEADER = new Color(48, 54, 67);
+    private static final Color BORDER = new Color(53, 58, 70);
+
+    // warna teks
+    private static final Color TEXT = new Color(230, 232, 237);
+    private static final Color TEXT_SECONDARY = new Color(160, 166, 180);
+
+    // warna tombol
+    private static final Color MINT = new Color(55, 183, 160);
+    private static final Color BLUE = new Color(59, 130, 246);
+    private static final Color RED = new Color(217, 76, 89);
+    private static final Color SLATE = new Color(70, 80, 99);
+
+    // warna tabel
+    private static final Color ROW_ALTERNATE = new Color(39, 43, 53);
+    private static final Color ROW_SELECTED = new Color(52, 74, 73);
 
     private DefaultTableModel model;
     private JTable tabel;
@@ -40,21 +57,21 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout(15, 15));
-        root.setBackground(NAVY);
+        root.setBackground(BACKGROUND);
         root.setBorder(BorderFactory.createEmptyBorder(22, 22, 22, 22));
 
         JLabel title = new JLabel("CO-WORKING SPACE & RENTAL PC GAMING",
                 SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 23));
-        title.setForeground(CYAN);
+        title.setForeground(MINT);
         root.add(title, BorderLayout.NORTH);
 
         // FORM BOOKING
         JPanel form = new JPanel(new GridLayout(3, 2, 12, 12));
         form.setBackground(PANEL);
         form.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(CYAN), "FORM BOOKING",
-                0, 0, new Font("Arial", Font.BOLD, 14), WHITE));
+                BorderFactory.createLineBorder(BORDER), "FORM BOOKING",
+                0, 0, new Font("Arial", Font.BOLD, 14), TEXT));
 
         inputNama = new JTextField();
         inputDurasi = new JTextField();
@@ -65,7 +82,7 @@ public class MainFrame extends JFrame {
         tambahField(form, "Jenis Fasilitas:", pilihFasilitas);
         tambahField(form, "Durasi (Jam):", inputDurasi);
 
-        JButton pesan = tombol("Pesan", BLUE);
+        JButton pesan = tombol("Pesan", MINT);
         JPanel formArea = new JPanel(new BorderLayout(10, 10));
         formArea.setBackground(PANEL);
         formArea.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
@@ -87,15 +104,27 @@ public class MainFrame extends JFrame {
         tabel.setRowHeight(27);
         tabel.setFont(new Font("Arial", Font.PLAIN, 13));
         tabel.setBackground(PANEL);
-        tabel.setForeground(WHITE);
-        tabel.setGridColor(new Color(71, 85, 105));
-        tabel.setSelectionBackground(BLUE);
-        tabel.setSelectionForeground(Color.WHITE);
+        tabel.setForeground(TEXT);
+        tabel.setGridColor(BORDER);
+        tabel.setSelectionBackground(ROW_SELECTED);
+        tabel.setSelectionForeground(TEXT);
         tabel.setFillsViewportHeight(true);
 
+        tabel.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+                c.setBackground(isSelected ? ROW_SELECTED : (row % 2 == 0 ? PANEL : ROW_ALTERNATE));
+                c.setForeground(TEXT);
+                return c;
+            }
+        });
+
         JTableHeader header = tabel.getTableHeader();
-        header.setBackground(BLUE);
-        header.setForeground(Color.WHITE);
+        header.setBackground(HEADER);
+        header.setForeground(TEXT);
         header.setFont(new Font("Arial", Font.BOLD, 13));
         header.setPreferredSize(new Dimension(0, 32));
 
@@ -105,30 +134,30 @@ public class MainFrame extends JFrame {
 
         JScrollPane scroll = new JScrollPane(tabel);
         scroll.getViewport().setBackground(PANEL);
-        scroll.setBorder(BorderFactory.createLineBorder(CYAN));
+        scroll.setBorder(BorderFactory.createLineBorder(BORDER));
 
         JLabel historyTitle = new JLabel("RIWAYAT TRANSAKSI");
-        historyTitle.setForeground(CYAN);
+        historyTitle.setForeground(TEXT);
         historyTitle.setFont(new Font("Arial", Font.BOLD, 16));
 
         JButton ubah = tombol("Ubah", BLUE);
-        JButton hapus = tombol("Hapus", new Color(185, 28, 28));
-        JButton refresh = tombol("Refresh", new Color(71, 85, 105));
+        JButton hapus = tombol("Hapus", RED);
+        JButton refresh = tombol("Refresh", SLATE);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        actions.setBackground(NAVY);
+        actions.setBackground(BACKGROUND);
         actions.add(ubah);
         actions.add(hapus);
         actions.add(refresh);
 
         JPanel history = new JPanel(new BorderLayout(8, 8));
-        history.setBackground(NAVY);
+        history.setBackground(BACKGROUND);
         history.add(historyTitle, BorderLayout.NORTH);
         history.add(scroll, BorderLayout.CENTER);
         history.add(actions, BorderLayout.SOUTH);
 
         JPanel center = new JPanel(new BorderLayout(14, 14));
-        center.setBackground(NAVY);
+        center.setBackground(BACKGROUND);
         center.add(formArea, BorderLayout.NORTH);
         center.add(history, BorderLayout.CENTER);
         root.add(center, BorderLayout.CENTER);
@@ -157,14 +186,16 @@ public class MainFrame extends JFrame {
 
     private void tambahField(JPanel panel, String text, JComponent field) {
         JLabel label = new JLabel(text);
-        label.setForeground(WHITE);
+        label.setForeground(TEXT_SECONDARY);
         label.setFont(new Font("Arial", Font.BOLD, 13));
         panel.add(label);
         panel.add(field);
 
+        field.setBackground(INPUT);
+        field.setForeground(TEXT);
         if (field instanceof JTextField) {
             field.setFont(new Font("Arial", Font.PLAIN, 14));
-            field.setBackground(new Color(248, 250, 252));
+            ((JTextField) field).setCaretColor(TEXT);
         } else {
             field.setFont(new Font("Arial", Font.PLAIN, 13));
         }
@@ -173,7 +204,7 @@ public class MainFrame extends JFrame {
     private JButton tombol(String text, Color color) {
         JButton button = new JButton(text);
         button.setBackground(color);
-        button.setForeground(Color.WHITE);
+        button.setForeground(TEXT);
         button.setFont(new Font("Arial", Font.BOLD, 13));
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createEmptyBorder(9, 16, 9, 16));
@@ -381,24 +412,32 @@ public class MainFrame extends JFrame {
         login.setLocationRelativeTo(null);
 
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 14));
-        panel.setBackground(NAVY);
+        panel.setBackground(BACKGROUND);
         panel.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 25));
 
         JLabel title = new JLabel("LOGIN ADMIN");
-        title.setForeground(CYAN);
+        title.setForeground(MINT);
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
         JTextField username = new JTextField();
+        username.setBackground(INPUT);
+        username.setForeground(TEXT);
+        username.setCaretColor(TEXT);
+
         JPasswordField password = new JPasswordField();
+        password.setBackground(INPUT);
+        password.setForeground(TEXT);
+        password.setCaretColor(TEXT);
+
         JButton loginButton = new JButton("Login");
-        loginButton.setBackground(BLUE);
-        loginButton.setForeground(Color.WHITE);
+        loginButton.setBackground(MINT);
+        loginButton.setForeground(TEXT);
         loginButton.setFocusPainted(false);
 
         JLabel userLabel = new JLabel("Username:");
         JLabel passLabel = new JLabel("Password:");
-        userLabel.setForeground(WHITE);
-        passLabel.setForeground(WHITE);
+        userLabel.setForeground(TEXT_SECONDARY);
+        passLabel.setForeground(TEXT_SECONDARY);
 
         panel.add(title);
         panel.add(new JLabel(""));
