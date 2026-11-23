@@ -11,6 +11,27 @@ import java.sql.Statement;
 public class MainFrame extends JFrame {
 
     private DefaultTableModel model;
+    private JComboBox<FacilityItem> pilihFasilitas;
+
+    // MENYIMPAN DATA FASILITAS
+    private static class FacilityItem {
+        int id;
+        String nama;
+        String jenis;
+        double tarif;
+
+        FacilityItem(int id, String nama, String jenis, double tarif) {
+            this.id = id;
+            this.nama = nama;
+            this.jenis = jenis;
+            this.tarif = tarif;
+        }
+
+        @Override
+        public String toString() {
+            return nama + " (" + jenis + ")";
+        }
+    }
 
     public MainFrame() {
 
@@ -40,12 +61,8 @@ public class MainFrame extends JFrame {
 
         JLabel labelFasilitas = new JLabel("Jenis Fasilitas:");
 
-        String[] daftarFasilitas = {
-            "Meja Desk", "Meeting Room", "PC Gaming"
-        };
-
-        JComboBox<String> pilihFasilitas =
-            new JComboBox<>(daftarFasilitas);
+        pilihFasilitas = new JComboBox<>();
+        muatFasilitas();
 
         JLabel labelDurasi = new JLabel("Durasi (Jam):");
         JTextField inputDurasi = new JTextField();
@@ -95,104 +112,77 @@ public class MainFrame extends JFrame {
         tombolPesan.addActionListener(e -> {
 
             String nama = inputNama.getText().trim();
-
-            String fasilitas =
-                pilihFasilitas.getSelectedItem().toString();
-
             String durasiText = inputDurasi.getText().trim();
 
             if (nama.isEmpty()) {
-
                 JOptionPane.showMessageDialog(this,
                     "Nama pelanggan harus diisi!");
+                return;
+            }
 
+            FacilityItem fasilitas =
+                (FacilityItem) pilihFasilitas.getSelectedItem();
+
+            if (fasilitas == null) {
+                JOptionPane.showMessageDialog(this,
+                    "Data fasilitas belum tersedia!");
                 return;
             }
 
             int durasi;
 
             try {
-
                 durasi = Integer.parseInt(durasiText);
 
                 if (durasi <= 0) {
-
                     JOptionPane.showMessageDialog(this,
                         "Durasi harus lebih dari 0!");
-
                     return;
                 }
 
-            } catch (Exception ex) {
-
+            } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Durasi harus angka!");
-
+                    "Durasi harus berupa angka!");
                 return;
             }
 
-            // MENENTUKAN TARIF
-            double tarifPerJam = 0;
-
-            if (fasilitas.equals("PC Gaming")) {
-
-                tarifPerJam = 10000;
-
-            } else if (fasilitas.equals("Meeting Room")) {
-
-                tarifPerJam = 50000;
-
-            } else if (fasilitas.equals("Meja Desk")) {
-
-                tarifPerJam = 15000;
-            }
-
-            // MENGHITUNG TOTAL HARGA
+            double tarifPerJam = fasilitas.tarif;
             double totalHarga = tarifPerJam * durasi;
 
-            try {
+            String sql = "INSERT INTO tb_transaksi "
+                + "(id_fasilitas, nama_pelanggan, durasi, "
+                + "tarif_per_jam, total_bayar) "
+                + "VALUES (?, ?, ?, ?, ?)";
 
-                Connection conn = KoneksiJava.getKoneksi();
+            try (Connection conn = KoneksiJava.getKoneksi()) {
 
                 if (conn == null) {
-
                     JOptionPane.showMessageDialog(this,
-                        "XAMPP belum nyala!");
-
+                        "Koneksi database gagal!");
                     return;
                 }
 
-                String sql = "INSERT INTO fasilitas "
-                    + "(nama_pelanggan, jenis, tarif_per_jam, "
-                    + "durasi, total_harga, status) "
-                    + "VALUES (?, ?, ?, ?, ?, ?)";
+                try (PreparedStatement ps =
+                    conn.prepareStatement(sql)) {
 
-                PreparedStatement ps = conn.prepareStatement(sql);
+                    ps.setInt(1, fasilitas.id);
+                    ps.setString(2, nama);
+                    ps.setInt(3, durasi);
+                    ps.setDouble(4, tarifPerJam);
+                    ps.setDouble(5, totalHarga);
 
-                ps.setString(1, nama);
-                ps.setString(2, fasilitas);
-                ps.setDouble(3, tarifPerJam);
-                ps.setInt(4, durasi);
-                ps.setDouble(5, totalHarga);
-                ps.setString(6, "Disewa");
-
-                ps.executeUpdate();
+                    ps.executeUpdate();
+                }
 
                 JOptionPane.showMessageDialog(this,
-                    "SUKSES! Data berhasil disimpan.");
+                    "SUKSES! Data booking berhasil disimpan.");
 
-                // MEMPERBARUI TABEL
                 tampilkanDataTabel();
 
-                // MENGOSONGKAN INPUT
                 inputNama.setText("");
                 inputDurasi.setText("");
 
-                ps.close();
-                conn.close();
-
             } catch (Exception ex) {
-
                 JOptionPane.showMessageDialog(this,
                     "ERROR DB: " + ex.getMessage());
             }
@@ -201,52 +191,87 @@ public class MainFrame extends JFrame {
         add(panelUtama);
     }
 
+    // METHOD MEMUAT DATA FASILITAS DARI DATABASE
+    private void muatFasilitas() {
 
-    // METHOD MENAMPILKAN DATA TABEL
+        pilihFasilitas.removeAllItems();
+
+        String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam "
+            + "FROM tb_fasilitas";
+
+        try (Connection conn = KoneksiJava.getKoneksi()) {
+
+            if (conn == null) {
+                return;
+            }
+
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+
+                while (rs.next()) {
+
+                    FacilityItem fasilitas = new FacilityItem(
+                        rs.getInt("id_fasilitas"),
+                        rs.getString("nama"),
+                        rs.getString("jenis"),
+                        rs.getDouble("tarif_per_jam")
+                    );
+
+                    pilihFasilitas.addItem(fasilitas);
+                }
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Gagal memuat fasilitas: " + e.getMessage());
+        }
+    }
+
+    // METHOD MENAMPILKAN DATA TRANSAKSI
     private void tampilkanDataTabel() {
 
         model.setRowCount(0);
 
-        try {
+        String sql = "SELECT t.nama_pelanggan, f.jenis, "
+            + "t.tarif_per_jam, t.durasi, t.total_bayar "
+            + "FROM tb_transaksi t "
+            + "LEFT JOIN tb_fasilitas f "
+            + "ON t.id_fasilitas = f.id_fasilitas "
+            + "ORDER BY t.id_transaksi ASC";
 
-            Connection conn = KoneksiJava.getKoneksi();
+        try (Connection conn = KoneksiJava.getKoneksi()) {
 
-            if (conn != null) {
+            if (conn == null) {
+                return;
+            }
 
-                Statement stmt = conn.createStatement();
-
-                ResultSet rs = stmt.executeQuery(
-                    "SELECT * FROM fasilitas"
-                );
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
 
                 int no = 1;
 
-while (rs.next()) {
-    model.addRow(new Object[]{
-        no++,
-        rs.getString("nama_pelanggan"),
-        rs.getString("jenis"),
-        rs.getDouble("tarif_per_jam"),
-        rs.getInt("durasi"),
-        rs.getDouble("total_harga"),
-        rs.getString("status")
-    });
-}
-                rs.close();
-                stmt.close();
-                conn.close();
+                while (rs.next()) {
+
+                    model.addRow(new Object[]{
+                        no++,
+                        rs.getString("nama_pelanggan"),
+                        rs.getString("jenis"),
+                        rs.getDouble("tarif_per_jam"),
+                        rs.getInt("durasi"),
+                        rs.getDouble("total_bayar"),
+                        "Booking"
+                    });
+                }
             }
 
         } catch (Exception e) {
 
-            System.out.println(
-                "Gagal narik data: " + e.getMessage()
-            );
+            JOptionPane.showMessageDialog(this,
+                "Gagal menampilkan transaksi: " + e.getMessage());
         }
     }
 
-
-    // HALAMAN LOGIN
+    // HALAMAN LOGIN ADMIN
     public static void tampilkanLogin() {
 
         JFrame login = new JFrame("Login Admin");
@@ -286,36 +311,60 @@ while (rs.next()) {
 
         tombolLogin.addActionListener(e -> {
 
-            String username = inputUsername.getText();
+            String username = inputUsername.getText().trim();
 
             String password = new String(
                 inputPassword.getPassword()
             );
 
-            if (username.equals("admin")
-                    && password.equals("12345")) {
+            String sql = "SELECT * FROM tb_admin "
+                + "WHERE username = ? AND password = ?";
 
+            try (Connection conn = KoneksiJava.getKoneksi()) {
+
+                if (conn == null) {
+                    JOptionPane.showMessageDialog(login,
+                        "Koneksi database gagal!");
+                    return;
+                }
+
+                try (PreparedStatement ps =
+                    conn.prepareStatement(sql)) {
+
+                    ps.setString(1, username);
+                    ps.setString(2, password);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+
+                        if (rs.next()) {
+
+                            JOptionPane.showMessageDialog(login,
+                                "Login berhasil!");
+
+                            login.dispose();
+
+                            MainFrame frame = new MainFrame();
+                            frame.setVisible(true);
+
+                        } else {
+
+                            JOptionPane.showMessageDialog(login,
+                                "Username atau password salah!");
+
+                            inputPassword.setText("");
+                        }
+                    }
+                }
+
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(login,
-                    "Login berhasil!");
-
-                login.dispose();
-
-                MainFrame frame = new MainFrame();
-                frame.setVisible(true);
-
-            } else {
-
-                JOptionPane.showMessageDialog(login,
-                    "Username atau password salah!");
-
-                inputPassword.setText("");
+                    "ERROR LOGIN: " + ex.getMessage());
             }
         });
 
         login.add(panel);
         login.setVisible(true);
     }
-
 
     // MAIN PROGRAM
     public static void main(String[] args) {
