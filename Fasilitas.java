@@ -1,5 +1,3 @@
-package PROJEKUAScopy;
-
 public abstract class Fasilitas {
     private int idFasilitas;
     private String nama;
