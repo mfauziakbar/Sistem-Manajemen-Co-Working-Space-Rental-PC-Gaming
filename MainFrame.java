@@ -414,7 +414,7 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        // Ambil data dari baris tabel yang diklik
+        // Ambil data dari baris tabel
         int r = tabel.convertRowIndexToModel(row);
         String nama = model.getValueAt(r, 3).toString();
         String fasilitas = model.getValueAt(r, 4).toString();
@@ -423,9 +423,10 @@ public class MainFrame extends JFrame {
         String total = model.getValueAt(r, 7).toString();
         String tanggal = model.getValueAt(r, 8).toString();
 
-        // Bikin teks struk sederhana pakai JTextArea
+        // Bikin teks struk
         JTextArea struk = new JTextArea();
         struk.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        struk.setEditable(false); // Biar teks previewnya gak bisa diedit user
         struk.append("========================================\n");
         struk.append("         STRUK CO-WORKING SPACE         \n");
         struk.append("========================================\n");
@@ -439,11 +440,21 @@ public class MainFrame extends JFrame {
         struk.append("========================================\n");
         struk.append("              Terima Kasih!             \n");
 
-        try {
-            // Fungsi ini otomatis buka dialog Print bawaan laptop/komputer
-            struk.print();
-        } catch (Exception e) {
-            pesan("Gagal nge-print struk!");
+        // Masukkan struk ke dalam JScrollPane untuk preview
+        JScrollPane preview = new JScrollPane(struk);
+        preview.setPreferredSize(new Dimension(350, 250));
+
+        // Munculkan pop-up preview dengan pilihan Yes/No
+        int pilihan = JOptionPane.showConfirmDialog(this, preview, 
+                "Preview Struk - Print / Simpan PDF?", JOptionPane.YES_NO_OPTION);
+
+        // Kalau user pilih Yes, eksekusi fungsi print
+        if (pilihan == JOptionPane.YES_OPTION) {
+            try {
+                struk.print(); // Otomatis buka dialog OS untuk Print atau Save as PDF
+            } catch (Exception e) {
+                pesan("Gagal nge-print struk!");
+            }
         }
     }
 
