@@ -143,12 +143,14 @@ public class MainFrame extends JFrame {
         JButton ubah = tombol("Ubah", BLUE);
         JButton hapus = tombol("Hapus", RED);
         JButton refresh = tombol("Refresh", SLATE);
+        JButton cetak = tombol("Cetak Struk", MINT);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actions.setBackground(BACKGROUND);
         actions.add(ubah);
         actions.add(hapus);
         actions.add(refresh);
+        actions.add(cetak);
 
         JPanel history = new JPanel(new BorderLayout(8, 8));
         history.setBackground(BACKGROUND);
@@ -182,6 +184,7 @@ public class MainFrame extends JFrame {
             bersihkanForm();
             tampilkanData();
         });
+        cetak.addActionListener(e -> cetakStruk());
     }
 
     private void tambahField(JPanel panel, String text, JComponent field) {
@@ -402,6 +405,46 @@ public class MainFrame extends JFrame {
 
     private void pesan(String text) {
         JOptionPane.showMessageDialog(this, text);
+    }
+
+    private void cetakStruk() {
+        int row = tabel.getSelectedRow();
+        if (row < 0) {
+            pesan("Pilih transaksi di tabel dulu buat dicetak!");
+            return;
+        }
+
+        // Ambil data dari baris tabel yang diklik
+        int r = tabel.convertRowIndexToModel(row);
+        String nama = model.getValueAt(r, 3).toString();
+        String fasilitas = model.getValueAt(r, 4).toString();
+        String tarif = model.getValueAt(r, 5).toString();
+        String durasi = model.getValueAt(r, 6).toString();
+        String total = model.getValueAt(r, 7).toString();
+        String tanggal = model.getValueAt(r, 8).toString();
+
+        // Bikin teks struk sederhana pakai JTextArea
+        JTextArea struk = new JTextArea();
+        struk.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        struk.append("========================================\n");
+        struk.append("         STRUK CO-WORKING SPACE         \n");
+        struk.append("========================================\n");
+        struk.append("Tanggal    : " + tanggal + "\n");
+        struk.append("Nama       : " + nama + "\n");
+        struk.append("Fasilitas  : " + fasilitas + "\n");
+        struk.append("Tarif/Jam  : Rp " + tarif + "\n");
+        struk.append("Durasi     : " + durasi + " Jam\n");
+        struk.append("----------------------------------------\n");
+        struk.append("TOTAL BAYAR: Rp " + total + "\n");
+        struk.append("========================================\n");
+        struk.append("              Terima Kasih!             \n");
+
+        try {
+            // Fungsi ini otomatis buka dialog Print bawaan laptop/komputer
+            struk.print();
+        } catch (Exception e) {
+            pesan("Gagal nge-print struk!");
+        }
     }
 
     // LOGIN ADMIN
