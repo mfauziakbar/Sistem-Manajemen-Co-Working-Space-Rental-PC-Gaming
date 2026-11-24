@@ -48,7 +48,7 @@ public class MainFrame extends JFrame {
         }
 
         public String toString() {
-            return nama + " (" + jenis + ") - " + status;
+            return "[" + status + "] " + nama + " - Rp " + (int) tarif + "/jam";
         }
     }
 
@@ -277,11 +277,6 @@ public class MainFrame extends JFrame {
 
             pesan("Booking berhasil disimpan!");
             muatFasilitas();
-            bersihkanForm();
-            tampilkanData();
-            ubahStatusFasilitas(f.id, "Disewa");
-            muatFasilitas();
-            pesan("Booking berhasil disimpan!");
             bersihkanForm();
             tampilkanData();
         } catch (Exception e) {
