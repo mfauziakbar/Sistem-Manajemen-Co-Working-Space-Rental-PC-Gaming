@@ -300,6 +300,10 @@ public class MainFrame extends JFrame {
         int id = Integer.parseInt(model.getValueAt(r, 0).toString());
         int idFasilitasLama = Integer.parseInt(model.getValueAt(r, 1).toString());
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
+        if (f.id != idFasilitasLama && f.status.equalsIgnoreCase("Disewa")) {
+            pesan("Fasilitas baru sedang disewa! Pilih fasilitas lain.");
+            return;
+        }
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
         Fasilitas fasilitasPilihan;
