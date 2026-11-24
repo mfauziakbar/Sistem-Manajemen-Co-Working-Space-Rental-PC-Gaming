@@ -294,6 +294,7 @@ public class MainFrame extends JFrame {
 
         int r = tabel.convertRowIndexToModel(row);
         int id = Integer.parseInt(model.getValueAt(r, 0).toString());
+        int idFasilitasLama = Integer.parseInt(model.getValueAt(r, 1).toString());
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
@@ -321,6 +322,11 @@ public class MainFrame extends JFrame {
             p.setDouble(5, totalHargaPBO); // Pakai hasil hitungan PBO, bukan f.tarif * durasi
             p.setInt(6, id);
             p.executeUpdate();
+            if (idFasilitasLama != f.id) {
+                ubahStatusFasilitas(idFasilitasLama, "Tersedia");
+                ubahStatusFasilitas(f.id, "Disewa");
+                muatFasilitas();
+            }
 
             pesan("Transaksi berhasil diperbarui!");
             bersihkanForm();
@@ -405,6 +411,17 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private void resetSemuaStatus() {
+        try (Connection c = KoneksiJava.getKoneksi();
+            Statement s = c.createStatement()) {
+            if (c != null) {
+                s.executeUpdate("UPDATE tb_fasilitas SET status = 'Tersedia'");
+            }
+        } catch (Exception e) {
+            System.out.println("Gagal reset status: " + e.getMessage());
+        }
+    }
+
     private void pilihFasilitasById(int id) {
         for (int i = 0; i < pilihFasilitas.getItemCount(); i++) {
             if (pilihFasilitas.getItemAt(i).id == id) {
@@ -447,6 +464,11 @@ public class MainFrame extends JFrame {
             }
         } catch (Exception e) {
             pesan("Gagal menampilkan riwayat: " + e.getMessage());
+        }
+
+        if (model.getRowCount() == 0) {
+            resetSemuaStatus();
+            muatFasilitas();
         }
     }
 
