@@ -241,18 +241,30 @@ public class MainFrame extends JFrame {
 
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
+
+        Fasilitas fasilitasPilihan;
+            if (f.jenis.equalsIgnoreCase("PC Gaming")) {
+                fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
+            } else if (f.jenis.equalsIgnoreCase("Ruang Meeting")) {
+                fasilitasPilihan = new MeetingRoom(f.nama, f.jenis, f.tarif, "Disewa");
+            } else {
+                fasilitasPilihan = new MejaDesk(f.nama, f.jenis, f.tarif, "Disewa");
+            }
+
+            double totalHargaPBO = fasilitasPilihan.hitungTarif(durasi);
+            
         String sql = "INSERT INTO tb_transaksi "
                 + "(id_fasilitas, nama_pelanggan, durasi, tarif_per_jam, total_bayar) "
                 + "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection c = KoneksiJava.getKoneksi();
-             PreparedStatement p = c.prepareStatement(sql)) {
+            PreparedStatement p = c.prepareStatement(sql)) {
             if (c == null) throw new SQLException("Koneksi database gagal!");
             p.setInt(1, f.id);
             p.setString(2, inputNama.getText().trim());
             p.setInt(3, durasi);
             p.setDouble(4, f.tarif);
-            p.setDouble(5, f.tarif * durasi);
+            p.setDouble(5, totalHargaPBO);
             p.executeUpdate();
 
             pesan("Booking berhasil disimpan!");
@@ -276,17 +288,29 @@ public class MainFrame extends JFrame {
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
+        // Terapkan Polymorphism (sama persis seperti di simpanTransaksi)
+        Fasilitas fasilitasPilihan;
+        if (f.jenis.equalsIgnoreCase("PC Gaming")) {
+            fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
+        } else if (f.nama.toLowerCase().contains("meeting")) {
+            fasilitasPilihan = new MeetingRoom(f.nama, f.jenis, f.tarif, "Disewa");
+        } else {
+            fasilitasPilihan = new MejaDesk(f.nama, f.jenis, f.tarif, "Disewa");
+        }
+
+        double totalHargaPBO = fasilitasPilihan.hitungTarif(durasi);
+
         String sql = "UPDATE tb_transaksi SET id_fasilitas=?, nama_pelanggan=?, "
                 + "durasi=?, tarif_per_jam=?, total_bayar=? WHERE id_transaksi=?";
 
         try (Connection c = KoneksiJava.getKoneksi();
-             PreparedStatement p = c.prepareStatement(sql)) {
+            PreparedStatement p = c.prepareStatement(sql)) {
             if (c == null) throw new SQLException("Koneksi database gagal!");
             p.setInt(1, f.id);
             p.setString(2, inputNama.getText().trim());
             p.setInt(3, durasi);
             p.setDouble(4, f.tarif);
-            p.setDouble(5, f.tarif * durasi);
+            p.setDouble(5, totalHargaPBO); // Pakai hasil hitungan PBO, bukan f.tarif * durasi
             p.setInt(6, id);
             p.executeUpdate();
 
