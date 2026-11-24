@@ -3,6 +3,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
+import java.awt.event.*;
 import java.sql.*;
 
 public class MainFrame extends JFrame {
@@ -166,6 +167,7 @@ public class MainFrame extends JFrame {
         setContentPane(root);
 
         tampilkanData();
+        jalankanTimer();
 
         tabel.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabel.getSelectedRow() >= 0) {
@@ -425,6 +427,42 @@ public class MainFrame extends JFrame {
         inputDurasi.setText("");
         tabel.clearSelection();
         if (pilihFasilitas.getItemCount() > 0) pilihFasilitas.setSelectedIndex(0);
+    }
+
+    private void jalankanTimer() {
+        // Timer jalan setiap 1000 milidetik (1 detik)
+        Timer timer = new Timer(1000, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                long waktuSekarang = System.currentTimeMillis();
+
+                // Cek semua baris yang ada di tabel
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    Timestamp tgl = (Timestamp) model.getValueAt(i, 8); // Kolom Tanggal
+                    int durasiJam = Integer.parseInt(model.getValueAt(i, 6).toString()); // Kolom Durasi
+
+                    if (tgl != null) {
+                        long waktuMulai = tgl.getTime();
+                        long durasiMilidetik = durasiJam * 60 * 60 * 1000;
+                        long waktuSelesai = waktuMulai + durasiMilidetik;
+
+                        long sisaDetik = (waktuSelesai - waktuSekarang) / 1000;
+
+                        if (sisaDetik > 0) {
+                            long jam = sisaDetik / 3600;
+                            long sisa = sisaDetik % 3600;
+                            long menit = sisa / 60;
+                            long detik = sisa % 60;
+
+                            String teksWaktu = jam + "j " + menit + "m " + detik + "d";
+                            model.setValueAt("Aktif (" + teksWaktu + ")", i, 9); // Kolom Status
+                        } else {
+                            model.setValueAt("Selesai", i, 9);
+                        }
+                    }
+                }
+            }
+        });
+        timer.start();
     }
 
     private void pesan(String text) {
