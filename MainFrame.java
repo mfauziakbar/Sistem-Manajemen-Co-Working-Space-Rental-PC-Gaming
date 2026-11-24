@@ -342,10 +342,12 @@ public class MainFrame extends JFrame {
             p.setInt(6, id);
             p.executeUpdate();
             if (idFasilitasLama != f.id) {
-                ubahStatusFasilitas(idFasilitasLama, "Tersedia");
-                ubahStatusFasilitas(f.id, "Disewa");
-                muatFasilitas();
-            }
+                if (model.getValueAt(r, 9).toString().startsWith("Aktif")) {
+                    ubahStatusFasilitas(idFasilitasLama, "Tersedia");
+                    ubahStatusFasilitas(f.id, "Disewa");
+                }
+            muatFasilitas();
+        }
 
             pesan("Transaksi berhasil diperbarui!");
             bersihkanForm();
@@ -378,7 +380,9 @@ public class MainFrame extends JFrame {
             p.setInt(1, id);
             int idFasilitas = Integer.parseInt(model.getValueAt(r, 1).toString());
             p.executeUpdate();
-            ubahStatusFasilitas(idFasilitas, "Tersedia");
+            if (model.getValueAt(r, 9).toString().startsWith("Aktif")) {
+                ubahStatusFasilitas(idFasilitas, "Tersedia");
+            }
             muatFasilitas();
 
             pesan("Transaksi berhasil dihapus!");
