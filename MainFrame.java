@@ -37,18 +37,19 @@ public class MainFrame extends JFrame {
 
     private static class Facility {
         int id;
-        String nama, jenis;
+        String nama, jenis, status;
         double tarif;
 
-        Facility(int id, String nama, String jenis, double tarif) {
+        Facility(int id, String nama, String jenis, double tarif, String status) {
             this.id = id;
             this.nama = nama;
             this.jenis = jenis;
             this.tarif = tarif;
+            this.status = status;
         }
 
         public String toString() {
-            return nama + " (" + jenis + ")";
+            return "[" + status + "] " + nama + " - Rp " + (int) tarif + "/jam";
         }
     }
 
@@ -246,6 +247,10 @@ public class MainFrame extends JFrame {
         if (!validasi()) return;
 
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
+        if (f.status.equalsIgnoreCase("Disewa")) {
+            pesan("Fasilitas ini sedang disewa! Pilih fasilitas lain.");
+            return;
+        }
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
         Fasilitas fasilitasPilihan;
@@ -272,8 +277,10 @@ public class MainFrame extends JFrame {
             p.setDouble(4, f.tarif);
             p.setDouble(5, totalHargaPBO);
             p.executeUpdate();
+            ubahStatusFasilitas(f.id, "Disewa");
 
             pesan("Booking berhasil disimpan!");
+            muatFasilitas();
             bersihkanForm();
             tampilkanData();
         } catch (Exception e) {
@@ -291,10 +298,10 @@ public class MainFrame extends JFrame {
 
         int r = tabel.convertRowIndexToModel(row);
         int id = Integer.parseInt(model.getValueAt(r, 0).toString());
+        int idFasilitasLama = Integer.parseInt(model.getValueAt(r, 1).toString());
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
-        // Terapkan Polymorphism (sama persis seperti di simpanTransaksi)
         Fasilitas fasilitasPilihan;
         if (f.jenis.equalsIgnoreCase("PC Gaming")) {
             fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
@@ -319,6 +326,11 @@ public class MainFrame extends JFrame {
             p.setDouble(5, totalHargaPBO); // Pakai hasil hitungan PBO, bukan f.tarif * durasi
             p.setInt(6, id);
             p.executeUpdate();
+            if (idFasilitasLama != f.id) {
+                ubahStatusFasilitas(idFasilitasLama, "Tersedia");
+                ubahStatusFasilitas(f.id, "Disewa");
+                muatFasilitas();
+            }
 
             pesan("Transaksi berhasil diperbarui!");
             bersihkanForm();
@@ -345,11 +357,14 @@ public class MainFrame extends JFrame {
         int id = Integer.parseInt(model.getValueAt(r, 0).toString());
 
         try (Connection c = KoneksiJava.getKoneksi();
-             PreparedStatement p = c.prepareStatement(
-                     "DELETE FROM tb_transaksi WHERE id_transaksi=?")) {
+            PreparedStatement p = c.prepareStatement(
+                "DELETE FROM tb_transaksi WHERE id_transaksi=?")) {
             if (c == null) throw new SQLException("Koneksi database gagal!");
             p.setInt(1, id);
+            int idFasilitas = Integer.parseInt(model.getValueAt(r, 1).toString());
             p.executeUpdate();
+            ubahStatusFasilitas(idFasilitas, "Tersedia");
+            muatFasilitas();
 
             pesan("Transaksi berhasil dihapus!");
             bersihkanForm();
@@ -361,23 +376,53 @@ public class MainFrame extends JFrame {
 
     private void muatFasilitas() {
         pilihFasilitas.removeAllItems();
-        String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam FROM tb_fasilitas";
-
+        String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam, status "
+                + "FROM tb_fasilitas "
+                + "ORDER BY CASE "
+                + "WHEN nama LIKE 'PC Gaming%' THEN 1 "
+                + "WHEN nama LIKE 'Ruang Meeting%' THEN 2 "
+                + "ELSE 3 END, nama ASC";
         try (Connection c = KoneksiJava.getKoneksi()) {
             if (c == null) throw new SQLException("Koneksi database gagal!");
             try (Statement s = c.createStatement();
-                 ResultSet r = s.executeQuery(sql)) {
+                ResultSet r = s.executeQuery(sql)) {
                 while (r.next()) {
                     pilihFasilitas.addItem(new Facility(
                             r.getInt("id_fasilitas"),
                             r.getString("nama"),
                             r.getString("jenis"),
-                            r.getDouble("tarif_per_jam")));
+                            r.getDouble("tarif_per_jam"),
+                            r.getString("status")));
                 }
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
                     "Gagal memuat fasilitas: " + e.getMessage());
+        }
+    }
+
+    private void ubahStatusFasilitas(int idFasilitas, String statusBaru) {
+        String sql = "UPDATE tb_fasilitas SET status=? WHERE id_fasilitas=?";
+        try (Connection c = KoneksiJava.getKoneksi();
+            PreparedStatement p = c.prepareStatement(sql)) {
+            if (c != null) {
+                p.setString(1, statusBaru);
+                p.setInt(2, idFasilitas);
+                p.executeUpdate();
+            }
+        } catch (Exception e) {
+            System.out.println("Gagal ubah status: " + e.getMessage());
+        }
+    }
+
+    private void resetSemuaStatus() {
+        try (Connection c = KoneksiJava.getKoneksi();
+            Statement s = c.createStatement()) {
+            if (c != null) {
+                s.executeUpdate("UPDATE tb_fasilitas SET status = 'Tersedia'");
+            }
+        } catch (Exception e) {
+            System.out.println("Gagal reset status: " + e.getMessage());
         }
     }
 
@@ -424,6 +469,11 @@ public class MainFrame extends JFrame {
         } catch (Exception e) {
             pesan("Gagal menampilkan riwayat: " + e.getMessage());
         }
+
+        if (model.getRowCount() == 0) {
+            resetSemuaStatus();
+            muatFasilitas();
+        }
     }
 
     private void bersihkanForm() {
@@ -434,35 +484,39 @@ public class MainFrame extends JFrame {
     }
 
     private void jalankanTimer() {
-        // Timer jalan setiap 1000 milidetik (1 detik)
         Timer timer = new Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 long waktuSekarang = System.currentTimeMillis();
+                // Simpan ID fasilitas yang sudah dicek (karena baris paling atas = transaksi terbaru)
+                java.util.ArrayList<Integer> sudahDicek = new java.util.ArrayList<>();
 
-                // Cek semua baris yang ada di tabel
                 for (int i = 0; i < model.getRowCount(); i++) {
-                    Timestamp tgl = (Timestamp) model.getValueAt(i, 8); // Kolom Tanggal
-                    int durasiJam = Integer.parseInt(model.getValueAt(i, 6).toString()); // Kolom Durasi
+                    int idFasilitas = Integer.parseInt(model.getValueAt(i, 1).toString());
+                    Timestamp tgl = (Timestamp) model.getValueAt(i, 8);
+                    int durasiJam = Integer.parseInt(model.getValueAt(i, 6).toString());
 
                     if (tgl != null) {
-                        long waktuMulai = tgl.getTime();
-                        long durasiMilidetik = durasiJam * 60 * 60 * 1000;
-                        long waktuSelesai = waktuMulai + durasiMilidetik;
-
+                        long waktuSelesai = tgl.getTime() + (durasiJam * 3600L * 1000L);
                         long sisaDetik = (waktuSelesai - waktuSekarang) / 1000;
 
                         if (sisaDetik > 0) {
                             long jam = sisaDetik / 3600;
-                            long sisa = sisaDetik % 3600;
-                            long menit = sisa / 60;
-                            long detik = sisa % 60;
-
-                            String teksWaktu = jam + "j " + menit + "m " + detik + "d";
-                            model.setValueAt("Aktif (" + teksWaktu + ")", i, 9); // Kolom Status
+                            long menit = (sisaDetik % 3600) / 60;
+                            long detik = sisaDetik % 60;
+                            model.setValueAt("Aktif (" + jam + "j " + menit + "m " + detik + "d)", i, 9);
                         } else {
-                            model.setValueAt("Selesai", i, 9);
+                            String statusTabel = model.getValueAt(i, 9).toString();
+                            if (!statusTabel.equals("Selesai")) {
+                                model.setValueAt("Selesai", i, 9);
+                                // Hanya ubah jadi Tersedia kalau ini transaksi terbaru untuk fasilitas tsb
+                                if (!sudahDicek.contains(idFasilitas)) {
+                                    ubahStatusFasilitas(idFasilitas, "Tersedia");
+                                    muatFasilitas();
+                                }
+                            }
                         }
                     }
+                    sudahDicek.add(idFasilitas);
                 }
             }
         });
