@@ -245,7 +245,7 @@ public class MainFrame extends JFrame {
         Fasilitas fasilitasPilihan;
             if (f.jenis.equalsIgnoreCase("PC Gaming")) {
                 fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
-            } else if (f.jenis.equalsIgnoreCase("Ruang Meeting")) {
+            } else if (f.nama.toLowerCase().contains("meeting")) {
                 fasilitasPilihan = new MeetingRoom(f.nama, f.jenis, f.tarif, "Disewa");
             } else {
                 fasilitasPilihan = new MejaDesk(f.nama, f.jenis, f.tarif, "Disewa");
