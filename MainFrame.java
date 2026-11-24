@@ -382,7 +382,8 @@ public class MainFrame extends JFrame {
         pilihFasilitas.removeAllItems();
         String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam, status "
                 + "FROM tb_fasilitas "
-                + "ORDER BY CASE "
+                + "ORDER BY CASE WHEN status = 'Tersedia' THEN 1 ELSE 2 END, "
+                + "CASE "
                 + "WHEN nama LIKE 'PC Gaming%' THEN 1 "
                 + "WHEN nama LIKE 'Ruang Meeting%' THEN 2 "
                 + "ELSE 3 END, nama ASC";
