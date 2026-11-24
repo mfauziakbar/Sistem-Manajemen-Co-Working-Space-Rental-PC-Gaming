@@ -366,8 +366,12 @@ public class MainFrame extends JFrame {
 
     private void muatFasilitas() {
         pilihFasilitas.removeAllItems();
-        String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam, status FROM tb_fasilitas";
-
+        String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam, status "
+                + "FROM tb_fasilitas "
+                + "ORDER BY CASE "
+                + "WHEN nama LIKE 'PC Gaming%' THEN 1 "
+                + "WHEN nama LIKE 'Ruang Meeting%' THEN 2 "
+                + "ELSE 3 END, nama ASC";
         try (Connection c = KoneksiJava.getKoneksi()) {
             if (c == null) throw new SQLException("Koneksi database gagal!");
             try (Statement s = c.createStatement();
