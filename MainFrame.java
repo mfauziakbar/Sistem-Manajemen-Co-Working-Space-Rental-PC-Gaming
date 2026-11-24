@@ -580,7 +580,7 @@ public class MainFrame extends JFrame {
 
     // LOGIN ADMIN
     private static void tampilkanLogin() {
-        JFrame login = new JFrame("Login Admin");
+        JFrame login = new JFrame("Program Co Working & Rental PC Gaming");
         login.setSize(380, 280);
         login.setDefaultCloseOperation(EXIT_ON_CLOSE);
         login.setLocationRelativeTo(null);
