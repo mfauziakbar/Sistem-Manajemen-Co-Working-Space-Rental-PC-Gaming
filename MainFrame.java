@@ -588,6 +588,7 @@ public class MainFrame extends JFrame {
         login.setSize(380, 280);
         login.setDefaultCloseOperation(EXIT_ON_CLOSE);
         login.setLocationRelativeTo(null);
+        login.setResizable(false);
 
         JPanel panel = new JPanel(new GridLayout(4, 2, 10, 14));
         panel.setBackground(BACKGROUND);
