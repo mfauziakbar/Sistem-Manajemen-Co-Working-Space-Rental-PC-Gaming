@@ -33,6 +33,7 @@ public class MainFrame extends JFrame {
     private JTable tabel;
     private JComboBox<Facility> pilihFasilitas;
     private JTextField inputNama, inputDurasi;
+    private final Rekapbulanan rekap = new Rekapbulanan();
 
     private static class Facility {
         int id;
@@ -145,6 +146,7 @@ public class MainFrame extends JFrame {
         JButton hapus = tombol("Hapus", RED);
         JButton refresh = tombol("Refresh", SLATE);
         JButton cetak = tombol("Cetak Struk", MINT);
+        JButton rekapButton = tombol("Rekap Bulanan", BLUE);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         actions.setBackground(BACKGROUND);
@@ -152,6 +154,7 @@ public class MainFrame extends JFrame {
         actions.add(hapus);
         actions.add(refresh);
         actions.add(cetak);
+        actions.add(rekapButton);
 
         JPanel history = new JPanel(new BorderLayout(8, 8));
         history.setBackground(BACKGROUND);
@@ -187,6 +190,7 @@ public class MainFrame extends JFrame {
             tampilkanData();
         });
         cetak.addActionListener(e -> cetakStruk());
+        rekapButton.addActionListener(e -> rekap.tampilkanRekap(this));
     }
 
     private void tambahField(JPanel panel, String text, JComponent field) {
