@@ -79,6 +79,17 @@ public class MainFrame extends JFrame {
         inputNama = new JTextField();
         inputDurasi = new JTextField();
         pilihFasilitas = new JComboBox<>();
+        pilihFasilitas.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton panah = new JButton("▼");
+                panah.setBackground(MINT); 
+                panah.setForeground(TEXT);
+                panah.setFocusPainted(false);
+                panah.setBorder(BorderFactory.createEmptyBorder());
+                return panah;
+            }
+        });
         muatFasilitas();
 
         tambahField(form, "Nama Pelanggan:", inputNama);
