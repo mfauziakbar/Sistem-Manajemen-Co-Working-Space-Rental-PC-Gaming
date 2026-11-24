@@ -403,6 +403,7 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this,
                     "Gagal memuat fasilitas: " + e.getMessage());
         }
+        pilihFasilitas.setSelectedIndex(-1);
     }
 
     private void ubahStatusFasilitas(int idFasilitas, String statusBaru) {
@@ -484,7 +485,7 @@ public class MainFrame extends JFrame {
         inputNama.setText("");
         inputDurasi.setText("");
         tabel.clearSelection();
-        if (pilihFasilitas.getItemCount() > 0) pilihFasilitas.setSelectedIndex(0);
+        pilihFasilitas.setSelectedIndex(-1); 
     }
 
     private void jalankanTimer() {
