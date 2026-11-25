@@ -8,7 +8,7 @@ import java.sql.*;
 
 public class MainFrame extends JFrame {
 
-    // background sama panel
+    // warna background sama panel
     private static final Color BACKGROUND = new Color(23, 26, 33);
     private static final Color PANEL = new Color(34, 38, 48);
     private static final Color INPUT = new Color(44, 48, 59);
@@ -25,16 +25,18 @@ public class MainFrame extends JFrame {
     private static final Color RED = new Color(217, 76, 89);
     private static final Color SLATE = new Color(70, 80, 99);
 
-    // warna tabel
+    // warna baris tabel
     private static final Color ROW_ALTERNATE = new Color(39, 43, 53);
     private static final Color ROW_SELECTED = new Color(52, 74, 73);
 
+    // komponen utama tampilan
     private DefaultTableModel model;
     private JTable tabel;
     private JComboBox<Facility> pilihFasilitas;
     private JTextField inputNama, inputDurasi;
     private final Rekapbulanan rekap = new Rekapbulanan();
 
+    // class bantu buat nampung data fasilitas di dropdown
     private static class Facility {
         int id;
         String nama, jenis, status;
@@ -48,11 +50,13 @@ public class MainFrame extends JFrame {
             this.status = status;
         }
 
+        // format teks yang muncul di list dropdown
         public String toString() {
             return "[" + status + "] " + nama + " - Rp " + (int) tarif + "/jam";
         }
     }
 
+    // pengaturan tampilan utama aplikasi
     public MainFrame() {
         setTitle("Co-Working Space & Rental PC Gaming");
         setSize(1050, 680);
@@ -63,6 +67,7 @@ public class MainFrame extends JFrame {
         root.setBackground(BACKGROUND);
         root.setBorder(BorderFactory.createEmptyBorder(22, 22, 22, 22));
 
+        // judul atas
         JLabel title = new JLabel("CO-WORKING SPACE & RENTAL PC GAMING",
                 SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 23));
@@ -79,6 +84,8 @@ public class MainFrame extends JFrame {
         inputNama = new JTextField();
         inputDurasi = new JTextField();
         pilihFasilitas = new JComboBox<>();
+        
+        // ubah warna tombol panah dropdown biar beda sendiri
         pilihFasilitas.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
             @Override
             protected JButton createArrowButton() {
@@ -107,7 +114,8 @@ public class MainFrame extends JFrame {
         String[] kolom = {"ID", "ID Fasilitas", "No", "Nama Pelanggan",
                 "Jenis Fasilitas", "Tarif/Jam", "Durasi",
                 "Total Harga", "Tanggal", "Status"};
-
+        
+        // kunci sel tabel biar ga bisa diedit langsung
         model = new DefaultTableModel(kolom, 0) {
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -124,6 +132,7 @@ public class MainFrame extends JFrame {
         tabel.setSelectionForeground(TEXT);
         tabel.setFillsViewportHeight(true);
 
+        // warna baris tabel selang-seling
         tabel.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
@@ -154,6 +163,7 @@ public class MainFrame extends JFrame {
         historyTitle.setForeground(TEXT);
         historyTitle.setFont(new Font("Arial", Font.BOLD, 16));
 
+        // tombol-tombol aksi di bawah tabel
         JButton ubah = tombol("Ubah", BLUE);
         JButton hapus = tombol("Hapus", RED);
         JButton refresh = tombol("Refresh", SLATE);
@@ -181,9 +191,11 @@ public class MainFrame extends JFrame {
         root.add(center, BorderLayout.CENTER);
         setContentPane(root);
 
+        // muat data awal & nyalakan timer
         tampilkanData();
         jalankanTimer();
 
+        // isi form otomatis pas baris tabel diklik
         tabel.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tabel.getSelectedRow() >= 0) {
                 int row = tabel.convertRowIndexToModel(tabel.getSelectedRow());
@@ -194,6 +206,7 @@ public class MainFrame extends JFrame {
             }
         });
 
+        // hubungkan tombol ke fungsinya masing-masing
         pesan.addActionListener(e -> simpanTransaksi());
         ubah.addActionListener(e -> ubahTransaksi());
         hapus.addActionListener(e -> hapusTransaksi());
@@ -205,6 +218,7 @@ public class MainFrame extends JFrame {
         rekapButton.addActionListener(e -> rekap.tampilkanRekap(this));
     }
 
+    // helper buat pasang label + kotak input ke panel form
     private void tambahField(JPanel panel, String text, JComponent field) {
         JLabel label = new JLabel(text);
         label.setForeground(TEXT_SECONDARY);
@@ -222,6 +236,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // helper buat bikin tombol dengan desain seragam
     private JButton tombol(String text, Color color) {
         JButton button = new JButton(text);
         button.setBackground(color);
@@ -233,6 +248,7 @@ public class MainFrame extends JFrame {
         return button;
     }
 
+    // cek input form sebelum simpan/ubah
     private boolean validasi() {
         if (inputNama.getText().trim().isEmpty()) {
             pesan("Nama pelanggan harus diisi!");
@@ -254,6 +270,7 @@ public class MainFrame extends JFrame {
         return true;
     }
 
+    // FITUR CREATE: simpan booking baru ke database
     private void simpanTransaksi() {
         if (!validasi()) return;
 
@@ -264,6 +281,7 @@ public class MainFrame extends JFrame {
         }
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
+        // PBO Polymorphism: buat objek subclass sesuai jenis fasilitas
         Fasilitas fasilitasPilihan;
             if (f.jenis.equalsIgnoreCase("PC Gaming")) {
                 fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
@@ -273,6 +291,7 @@ public class MainFrame extends JFrame {
                 fasilitasPilihan = new MejaDesk(f.nama, f.jenis, f.tarif, "Disewa");
             }
 
+            // hitung total bayar lewat method override di masing-masing subclass
             double totalHargaPBO = fasilitasPilihan.hitungTarif(durasi);
             
         String sql = "INSERT INTO tb_transaksi "
@@ -288,7 +307,7 @@ public class MainFrame extends JFrame {
             p.setDouble(4, f.tarif);
             p.setDouble(5, totalHargaPBO);
             p.executeUpdate();
-            ubahStatusFasilitas(f.id, "Disewa");
+            ubahStatusFasilitas(f.id, "Disewa"); // tandai unit jadi Disewa
 
             pesan("Booking berhasil disimpan!");
             muatFasilitas();
@@ -299,6 +318,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // FITUR UPDATE: edit transaksi yang dipilih di tabel
     private void ubahTransaksi() {
         int row = tabel.getSelectedRow();
         if (row < 0) {
@@ -311,12 +331,15 @@ public class MainFrame extends JFrame {
         int id = Integer.parseInt(model.getValueAt(r, 0).toString());
         int idFasilitasLama = Integer.parseInt(model.getValueAt(r, 1).toString());
         Facility f = (Facility) pilihFasilitas.getSelectedItem();
+        
+        // cegah pindah ke unit lain yang lagi disewa
         if (f.id != idFasilitasLama && f.status.equalsIgnoreCase("Disewa")) {
             pesan("Fasilitas baru sedang disewa! Pilih fasilitas lain.");
             return;
         }
         int durasi = Integer.parseInt(inputDurasi.getText().trim());
 
+        // hitung ulang tarif pakai PBO
         Fasilitas fasilitasPilihan;
         if (f.jenis.equalsIgnoreCase("PC Gaming")) {
             fasilitasPilihan = new PCGaming(f.nama, f.jenis, f.tarif, "Disewa");
@@ -341,6 +364,8 @@ public class MainFrame extends JFrame {
             p.setDouble(5, totalHargaPBO); // Pakai hasil hitungan PBO, bukan f.tarif * durasi
             p.setInt(6, id);
             p.executeUpdate();
+
+            // kalau ganti unit & sewanya masih aktif, tukar status unit lama dan baru
             if (idFasilitasLama != f.id) {
                 if (model.getValueAt(r, 9).toString().startsWith("Aktif")) {
                     ubahStatusFasilitas(idFasilitasLama, "Tersedia");
@@ -357,6 +382,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // FITUR DELETE: hapus transaksi yang dipilih
     private void hapusTransaksi() {
         int row = tabel.getSelectedRow();
         if (row < 0) {
@@ -380,6 +406,8 @@ public class MainFrame extends JFrame {
             p.setInt(1, id);
             int idFasilitas = Integer.parseInt(model.getValueAt(r, 1).toString());
             p.executeUpdate();
+
+            // balikin status jadi Tersedia cuma kalau transaksi yang dihapus masih aktif
             if (model.getValueAt(r, 9).toString().startsWith("Aktif")) {
                 ubahStatusFasilitas(idFasilitas, "Tersedia");
             }
@@ -393,6 +421,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // isi dropdown fasilitas, yang Tersedia ditaruh paling atas
     private void muatFasilitas() {
         pilihFasilitas.removeAllItems();
         String sql = "SELECT id_fasilitas, nama, jenis, tarif_per_jam, status "
@@ -419,9 +448,10 @@ public class MainFrame extends JFrame {
             JOptionPane.showMessageDialog(this,
                     "Gagal memuat fasilitas: " + e.getMessage());
         }
-        pilihFasilitas.setSelectedIndex(-1);
+        pilihFasilitas.setSelectedIndex(-1); // kosongkan pilihan awal
     }
 
+    // update status Tersedia/Disewa di tabel tb_fasilitas
     private void ubahStatusFasilitas(int idFasilitas, String statusBaru) {
         String sql = "UPDATE tb_fasilitas SET status=? WHERE id_fasilitas=?";
         try (Connection c = KoneksiJava.getKoneksi();
@@ -436,6 +466,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // reset semua fasilitas jadi Tersedia kalau tabel transaksi kosong
     private void resetSemuaStatus() {
         try (Connection c = KoneksiJava.getKoneksi();
             Statement s = c.createStatement()) {
@@ -447,6 +478,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // pilih item dropdown sesuai ID fasilitas dari baris tabel yang diklik
     private void pilihFasilitasById(int id) {
         for (int i = 0; i < pilihFasilitas.getItemCount(); i++) {
             if (pilihFasilitas.getItemAt(i).id == id) {
@@ -456,6 +488,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // FITUR READ: ambil data transaksi dari database lalu tampilkan ke tabel
     private void tampilkanData() {
         model.setRowCount(0);
         String sql = "SELECT t.id_transaksi, t.id_fasilitas, t.nama_pelanggan, "
@@ -497,6 +530,7 @@ public class MainFrame extends JFrame {
         }
     }
 
+    // kosongkan form input & pilihan baris tabel
     private void bersihkanForm() {
         inputNama.setText("");
         inputDurasi.setText("");
@@ -504,6 +538,7 @@ public class MainFrame extends JFrame {
         pilihFasilitas.setSelectedIndex(-1); 
     }
 
+    // FITUR TIMER REAL-TIME: hitung mundur durasi tiap 1 detik
     private void jalankanTimer() {
         Timer timer = new Timer(1000, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -517,19 +552,21 @@ public class MainFrame extends JFrame {
                     int durasiJam = Integer.parseInt(model.getValueAt(i, 6).toString());
 
                     if (tgl != null) {
+                        // hitung batas waktu selesai (waktu booking + durasi dalam milidetik)
                         long waktuSelesai = tgl.getTime() + (durasiJam * 3600L * 1000L);
                         long sisaDetik = (waktuSelesai - waktuSekarang) / 1000;
 
                         if (sisaDetik > 0) {
+                            // kalau waktu masih sisa, tampilkan hitung mundur
                             long jam = sisaDetik / 3600;
                             long menit = (sisaDetik % 3600) / 60;
                             long detik = sisaDetik % 60;
                             model.setValueAt("Aktif (" + jam + "j " + menit + "m " + detik + "d)", i, 9);
                         } else {
+                            // kalau waktu habis, ubah jadi Selesai & balikin unit jadi Tersedia
                             String statusTabel = model.getValueAt(i, 9).toString();
                             if (!statusTabel.equals("Selesai")) {
                                 model.setValueAt("Selesai", i, 9);
-                                // Hanya ubah jadi Tersedia kalau ini transaksi terbaru untuk fasilitas tsb
                                 if (!sudahDicek.contains(idFasilitas)) {
                                     ubahStatusFasilitas(idFasilitas, "Tersedia");
                                     muatFasilitas();
@@ -544,10 +581,12 @@ public class MainFrame extends JFrame {
         timer.start();
     }
 
+    // helper pop-up notifikasi
     private void pesan(String text) {
         JOptionPane.showMessageDialog(this, text);
     }
 
+    // FITUR CETAK STRUK: preview struk & kirim ke printer / save PDF
     private void cetakStruk() {
         int row = tabel.getSelectedRow();
         if (row < 0) {
@@ -555,7 +594,7 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        // Ambil data dari baris tabel
+        // ambil data transaksi dari baris yang dipilih
         int r = tabel.convertRowIndexToModel(row);
         String nama = model.getValueAt(r, 3).toString();
         String fasilitas = model.getValueAt(r, 4).toString();
@@ -564,7 +603,7 @@ public class MainFrame extends JFrame {
         String total = model.getValueAt(r, 7).toString();
         String tanggal = model.getValueAt(r, 8).toString();
 
-        // Bikin teks struk
+        // susun tampilan teks struk
         JTextArea struk = new JTextArea();
         struk.setFont(new Font("Monospaced", Font.PLAIN, 12));
         struk.setEditable(false); // Biar teks previewnya gak bisa diedit user
@@ -585,7 +624,7 @@ public class MainFrame extends JFrame {
         JScrollPane preview = new JScrollPane(struk);
         preview.setPreferredSize(new Dimension(350, 250));
 
-        // Munculkan pop-up preview dengan pilihan Yes/No
+        // tampilkan preview, kalau klik Yes langsung print / save PDF
         int pilihan = JOptionPane.showConfirmDialog(this, preview, 
                 "Preview Struk - Print / Simpan PDF?", JOptionPane.YES_NO_OPTION);
 
@@ -599,7 +638,7 @@ public class MainFrame extends JFrame {
         }
     }
 
-    // LOGIN ADMIN
+    // FITUR LOGIN ADMIN: cek username & password ke database sebelum buka aplikasi
     private static void tampilkanLogin() {
         JFrame login = new JFrame("Program Co Working & Rental PC Gaming");
         login.setSize(380, 280);
@@ -644,6 +683,7 @@ public class MainFrame extends JFrame {
         panel.add(new JLabel(""));
         panel.add(loginButton);
 
+        // proses cek login saat tombol Login diklik
         loginButton.addActionListener(e -> {
             String sql = "SELECT * FROM tb_admin WHERE username=? AND password=?";
 
@@ -655,8 +695,8 @@ public class MainFrame extends JFrame {
 
                     try (ResultSet r = p.executeQuery()) {
                         if (r.next()) {
-                            login.dispose();
-                            new MainFrame().setVisible(true);
+                            login.dispose(); // tutup window login
+                            new MainFrame().setVisible(true); // buka halaman utama
                         } else {
                             JOptionPane.showMessageDialog(login,
                                     "Username atau password salah!");
@@ -673,7 +713,8 @@ public class MainFrame extends JFrame {
         login.setContentPane(panel);
         login.setVisible(true);
     }
-     public static void main(String[] args) {
+    // titik awal program dijalankan
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(MainFrame::tampilkanLogin);
     }
 }
