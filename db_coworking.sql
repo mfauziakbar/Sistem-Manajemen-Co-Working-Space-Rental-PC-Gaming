@@ -25,7 +25,6 @@ CREATE TABLE tb_transaksi (
   tarif_per_jam double NOT NULL,
   total_bayar double NOT NULL,
   FOREIGN KEY (id_fasilitas) REFERENCES tb_fasilitas(id_fasilitas) ON DELETE SET NULL ON UPDATE CASCADE,
-  FOREIGN KEY (id_user) REFERENCES tb_user(id_user)
 );
 
 -- Data awal agar aplikasi bisa langsung di-login dan diuji coba
