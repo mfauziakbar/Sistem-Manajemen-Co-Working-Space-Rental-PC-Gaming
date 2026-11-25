@@ -615,7 +615,7 @@ public class MainFrame extends JFrame {
         title.setForeground(MINT);
         title.setFont(new Font("Arial", Font.BOLD, 20));
 
-        JTextField username = new JTextField();
+        JTextField  username = new JTextField();
         username.setBackground(INPUT);
         username.setForeground(TEXT);
         username.setCaretColor(TEXT);
