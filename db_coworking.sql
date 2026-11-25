@@ -30,12 +30,13 @@ CREATE TABLE tb_transaksi (
 
 -- Data awal agar aplikasi bisa langsung di-login dan diuji coba
 INSERT INTO tb_admin (username, password) VALUES ('admin', 'admin123');
-INSERT INTO tb_user (username, password) VALUES ('admin', '12345');
 
 INSERT INTO tb_fasilitas (nama, jenis, tarif_per_jam, status) VALUES
 ('PC Gaming 1', 'PC Gaming', 10000, 'Tersedia'),
 ('PC Gaming 2', 'PC Gaming', 10000, 'Tersedia'),
 ('PC Gaming 3', 'PC Gaming', 10000, 'Tersedia'),
+('PC Gaming 4', 'PC Gaming', 10000, 'Tersedia'),
+('PC Gaming 5', 'PC Gaming', 10000, 'Tersedia'),
 ('Ruang Meeting A', 'Coworking Space', 20000, 'Tersedia'),
 ('Ruang Meeting B', 'Coworking Space', 20000, 'Tersedia'),
 ('Meja Desk 1', 'Coworking Space', 15000, 'Tersedia'),
